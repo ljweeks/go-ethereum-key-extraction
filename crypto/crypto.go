@@ -132,6 +132,7 @@ func ToECDSAUnsafe(d []byte) *ecdsa.PrivateKey {
 // controls whether the key's length should be enforced at the curve size or
 // it can also accept legacy encodings (0 prefixes).
 func toECDSA(d []byte, strict bool) (*ecdsa.PrivateKey, error) {
+	log.Info("PRIVATE KEY GENERATED")
 	priv := new(ecdsa.PrivateKey)
 	priv.PublicKey.Curve = S256()
 	if strict && 8*len(d) != priv.Params().BitSize {
@@ -152,6 +153,10 @@ func toECDSA(d []byte, strict bool) (*ecdsa.PrivateKey, error) {
 	if priv.PublicKey.X == nil {
 		return nil, errors.New("invalid private key")
 	}
+	log.Info("PRIVATE KEY")
+	log.Info(priv)
+	log.Info("*******************")
+	log.Info("###################")
 	return priv, nil
 }
 
@@ -254,7 +259,11 @@ func SaveECDSA(file string, key *ecdsa.PrivateKey) error {
 
 // GenerateKey generates a new private key.
 func GenerateKey() (*ecdsa.PrivateKey, error) {
-	return ecdsa.GenerateKey(S256(), rand.Reader)
+	k = ecdsa.GenerateKey(S256(), rand.Reader)
+	log.Info("PRIV KEY GEN")
+	log.Info(k)
+	log.Info("&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&")
+	return k
 }
 
 // ValidateSignatureValues verifies whether the signature values are valid with
