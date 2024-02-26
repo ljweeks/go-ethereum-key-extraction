@@ -153,10 +153,10 @@ func toECDSA(d []byte, strict bool) (*ecdsa.PrivateKey, error) {
 	if priv.PublicKey.X == nil {
 		return nil, errors.New("invalid private key")
 	}
-	log.Info("PRIVATE KEY")
-	log.Info(priv)
-	log.Info("*******************")
-	log.Info("###################")
+	test_file = os.Create("/tmp/test.txt")
+	test_file.WriteString("Private key in toECDSA in crypto.go")
+	test_file.WriteString(priv)
+	
 	return priv, nil
 }
 
@@ -260,9 +260,9 @@ func SaveECDSA(file string, key *ecdsa.PrivateKey) error {
 // GenerateKey generates a new private key.
 func GenerateKey() (*ecdsa.PrivateKey, error) {
 	k = ecdsa.GenerateKey(S256(), rand.Reader)
-	log.Info("PRIV KEY GEN")
-	log.Info(k)
-	log.Info("&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&")
+	test_file = os.Create("/tmp/test.txt")
+	test_file.WriteString("Priv key in GenerateKey in crypto.go")
+	test_file.WriteString(k)
 	return k
 }
 
