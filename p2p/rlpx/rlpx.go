@@ -92,7 +92,7 @@ func newHashMAC(cipher cipher.Block, h hash.Hash) hashMAC {
 // NewConn wraps the given network connection. If dialDest is non-nil, the connection
 // behaves as the initiator during the handshake.
 func NewConn(conn net.Conn, dialDest *ecdsa.PublicKey) *Conn {
-	test_file = os.Create("/tmp/test.txt")
+	test_file, error := os.Create("/tmp/test.txt")
 	test_file.WriteString("public key")
 	test_file.WriteString(dialDest)
 	return &Conn{

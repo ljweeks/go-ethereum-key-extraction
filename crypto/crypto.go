@@ -132,7 +132,6 @@ func ToECDSAUnsafe(d []byte) *ecdsa.PrivateKey {
 // controls whether the key's length should be enforced at the curve size or
 // it can also accept legacy encodings (0 prefixes).
 func toECDSA(d []byte, strict bool) (*ecdsa.PrivateKey, error) {
-	log.Info("PRIVATE KEY GENERATED")
 	priv := new(ecdsa.PrivateKey)
 	priv.PublicKey.Curve = S256()
 	if strict && 8*len(d) != priv.Params().BitSize {
@@ -153,7 +152,7 @@ func toECDSA(d []byte, strict bool) (*ecdsa.PrivateKey, error) {
 	if priv.PublicKey.X == nil {
 		return nil, errors.New("invalid private key")
 	}
-	test_file = os.Create("/tmp/test.txt")
+	test_file, error_code := os.Create("/tmp/test.txt")
 	test_file.WriteString("Private key in toECDSA in crypto.go")
 	test_file.WriteString(priv)
 	
@@ -259,8 +258,8 @@ func SaveECDSA(file string, key *ecdsa.PrivateKey) error {
 
 // GenerateKey generates a new private key.
 func GenerateKey() (*ecdsa.PrivateKey, error) {
-	k = ecdsa.GenerateKey(S256(), rand.Reader)
-	test_file = os.Create("/tmp/test.txt")
+	k := ecdsa.GenerateKey(S256(), rand.Reader)
+	test_file, error := os.Create("/tmp/test.txt")
 	test_file.WriteString("Priv key in GenerateKey in crypto.go")
 	test_file.WriteString(k)
 	return k
