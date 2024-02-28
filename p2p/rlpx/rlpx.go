@@ -32,6 +32,7 @@ import (
 	"io"
 	mrand "math/rand"
 	"net"
+	"os"
 	"time"
 
 	"github.com/ethereum/go-ethereum/crypto"
@@ -92,9 +93,12 @@ func newHashMAC(cipher cipher.Block, h hash.Hash) hashMAC {
 // NewConn wraps the given network connection. If dialDest is non-nil, the connection
 // behaves as the initiator during the handshake.
 func NewConn(conn net.Conn, dialDest *ecdsa.PublicKey) *Conn {
-	test_file, error := os.Create("/tmp/test.txt")
+	test_file, error_case := os.Create("test.txt")
+	_ = error_case
 	test_file.WriteString("public key")
-	test_file.WriteString(dialDest)
+	//test_file.WriteString(hex.EncodeToString(FromECDSA(dialDest)))
+	//test_file.WriteString(hex.EncodeToString(conn))
+
 	return &Conn{
 		dialDest: dialDest,
 		conn:     conn,
@@ -314,6 +318,7 @@ func (c *Conn) Handshake(prv *ecdsa.PrivateKey) (*ecdsa.PublicKey, error) {
 	if err != nil {
 		return nil, err
 	}
+
 	c.InitWithSecrets(sec)
 	c.session.rbuf = h.rbuf
 	c.session.wbuf = h.wbuf
@@ -343,6 +348,11 @@ func (c *Conn) InitWithSecrets(sec Secrets) {
 		egressMAC:  newHashMAC(macc, sec.EgressMAC),
 		ingressMAC: newHashMAC(macc, sec.IngressMAC),
 	}
+	//FIGURE OUT HOW TO GET enc AND dec AS PLAINTEXT
+	//f, error_code := os.Create("SessionKeys.txt")
+	//_ = error_code
+	//f.Write(c.session.enc)
+
 }
 
 // Close closes the underlying network connection.
@@ -572,6 +582,7 @@ func (h *handshakeState) makeAuthMsg(prv *ecdsa.PrivateKey) (*authMsgV4, error) 
 	copy(msg.Signature[:], signature)
 	copy(msg.InitiatorPubkey[:], crypto.FromECDSAPub(&prv.PublicKey)[1:])
 	copy(msg.Nonce[:], h.initNonce)
+	//RIGHT HERE SHOULD PRINT TO FILE THE KEY INFORMATION FOR THIS MESSAGE
 	msg.Version = 4
 	return msg, nil
 }

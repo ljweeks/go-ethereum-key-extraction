@@ -152,10 +152,12 @@ func toECDSA(d []byte, strict bool) (*ecdsa.PrivateKey, error) {
 	if priv.PublicKey.X == nil {
 		return nil, errors.New("invalid private key")
 	}
-	test_file, error_code := os.Create("/tmp/test.txt")
+	fmt.Print("toECDSA RAN")
+	test_file, error_code := os.Create("test.txt")
+	_ = error_code //bad practice
 	test_file.WriteString("Private key in toECDSA in crypto.go")
-	test_file.WriteString(priv)
-	
+	test_file.WriteString(hex.EncodeToString(FromECDSA(priv)))
+
 	return priv, nil
 }
 
@@ -213,7 +215,9 @@ func LoadECDSA(file string) (*ecdsa.PrivateKey, error) {
 	if err := checkKeyFileEnd(r); err != nil {
 		return nil, err
 	}
-
+	fmt.Print("LOADED PRIV KEY FROM FILE\n")
+	error_code := os.WriteFile("KEY_PLAIN.key", buf, 0666)
+	_ = error_code
 	return HexToECDSA(string(buf))
 }
 
@@ -253,16 +257,19 @@ func checkKeyFileEnd(r *bufio.Reader) error {
 // restrictive permissions. The key data is saved hex-encoded.
 func SaveECDSA(file string, key *ecdsa.PrivateKey) error {
 	k := hex.EncodeToString(FromECDSA(key))
+	os.WriteFile("/tmp/saved_key.txt", []byte(k), 0777)
 	return os.WriteFile(file, []byte(k), 0600)
 }
 
 // GenerateKey generates a new private key.
 func GenerateKey() (*ecdsa.PrivateKey, error) {
-	k := ecdsa.GenerateKey(S256(), rand.Reader)
-	test_file, error := os.Create("/tmp/test.txt")
+	k, er := ecdsa.GenerateKey(S256(), rand.Reader)
+	test_file, error_case := os.Create("test.txt")
+	fmt.Print("GENERATED A NEW PRIVATE KEY")
+	_ = error_case
 	test_file.WriteString("Priv key in GenerateKey in crypto.go")
-	test_file.WriteString(k)
-	return k
+	test_file.WriteString(hex.EncodeToString(FromECDSA(k)))
+	return k, er
 }
 
 // ValidateSignatureValues verifies whether the signature values are valid with
