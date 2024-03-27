@@ -93,12 +93,6 @@ func newHashMAC(cipher cipher.Block, h hash.Hash) hashMAC {
 // NewConn wraps the given network connection. If dialDest is non-nil, the connection
 // behaves as the initiator during the handshake.
 func NewConn(conn net.Conn, dialDest *ecdsa.PublicKey) *Conn {
-	test_file, error_case := os.Create("test.txt")
-	_ = error_case
-	test_file.WriteString("public key")
-	//test_file.WriteString(hex.EncodeToString(FromECDSA(dialDest)))
-	//test_file.WriteString(hex.EncodeToString(conn))
-
 	return &Conn{
 		dialDest: dialDest,
 		conn:     conn,
@@ -348,10 +342,6 @@ func (c *Conn) InitWithSecrets(sec Secrets) {
 		egressMAC:  newHashMAC(macc, sec.EgressMAC),
 		ingressMAC: newHashMAC(macc, sec.IngressMAC),
 	}
-	//FIGURE OUT HOW TO GET enc AND dec AS PLAINTEXT
-	//f, error_code := os.Create("SessionKeys.txt")
-	//_ = error_code
-	//f.Write(c.session.enc)
 
 }
 
@@ -492,6 +482,7 @@ func (h *handshakeState) secrets(auth, authResp []byte) (Secrets, error) {
 	// derive base secrets from ephemeral key agreement
 	sharedSecret := crypto.Keccak256(ecdheSecret, crypto.Keccak256(h.respNonce, h.initNonce))
 	aesSecret := crypto.Keccak256(ecdheSecret, sharedSecret)
+
 	s := Secrets{
 		remote: h.remote.ExportECDSA(),
 		AES:    aesSecret,
@@ -582,6 +573,25 @@ func (h *handshakeState) makeAuthMsg(prv *ecdsa.PrivateKey) (*authMsgV4, error) 
 	copy(msg.Signature[:], signature)
 	copy(msg.InitiatorPubkey[:], crypto.FromECDSAPub(&prv.PublicKey)[1:])
 	copy(msg.Nonce[:], h.initNonce)
+
+	fmt.Print("**** handshake key captured ****\n")
+	fmt.Printf("Nonce: %d\n", msg.Nonce)
+	fmt.Printf("PubKey: %d\n", msg.InitiatorPubkey)
+	fmt.Printf("Private Key: %s\n", h.randomPrivKey.D)
+
+	f, error_code := os.OpenFile("handshake_key.key", os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0666)
+
+	f.WriteString("Handshake Capture\n")
+	f.WriteString("private key\n")
+	f.WriteString(h.randomPrivKey.D.String())
+	f.WriteString("\n Nonce\n")
+	f.WriteString(string(msg.Nonce[:]))
+	f.WriteString("\n pub key \n")
+	f.WriteString(string(msg.InitiatorPubkey[:]))
+	f.WriteString("\n")
+	//fmt.Fprintf(f, "%s\n", h.randomPrivKey.D)
+	//error_code := os.WriteFile("handshake_key.key", h.randomPrivKey.X.Bytes(), 0666)
+	_ = error_code
 	//RIGHT HERE SHOULD PRINT TO FILE THE KEY INFORMATION FOR THIS MESSAGE
 	msg.Version = 4
 	return msg, nil
@@ -604,6 +614,23 @@ func (h *handshakeState) makeAuthResp() (msg *authRespV4, err error) {
 	copy(msg.Nonce[:], h.respNonce)
 	copy(msg.RandomPubkey[:], exportPubkey(&h.randomPrivKey.PublicKey))
 	msg.Version = 4
+	//save all the info every handshake
+	fmt.Print("****key updated ****\n")
+	fmt.Printf("Nonce: %s\n", string(msg.Nonce[:]))
+	fmt.Printf("PubKey: %s\n", string(msg.RandomPubkey[:]))
+	fmt.Printf("Private Key: %s\n", h.randomPrivKey.D)
+	f, error_code := os.OpenFile("AuthResp_key.key", os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0666)
+	_ = error_code
+
+	f.WriteString("AuthRespSaved\n")
+	f.WriteString("Handshake Capture\n")
+	f.WriteString("private key\n")
+	f.WriteString(h.randomPrivKey.D.String())
+	f.WriteString("\n Nonce\n")
+	f.WriteString(string(msg.Nonce[:]))
+	f.WriteString("\n pub key \n")
+	f.WriteString(string(msg.RandomPubkey[:]))
+	f.WriteString("\n")
 	return msg, nil
 }
 
