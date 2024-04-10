@@ -31,6 +31,7 @@ import (
 	"io"
 	mrand "math/rand"
 	"net"
+	"os"
 	"time"
 
 	"github.com/ethereum/go-ethereum/crypto"
@@ -569,6 +570,24 @@ func (h *handshakeState) makeAuthMsg(prv *ecdsa.PrivateKey) (*authMsgV4, error) 
 	copy(msg.InitiatorPubkey[:], crypto.FromECDSAPub(&prv.PublicKey)[1:])
 	copy(msg.Nonce[:], h.initNonce)
 	msg.Version = 4
+
+	fmt.Print("**** handshake key captured ****\n")
+	fmt.Printf("Nonce: %d\n", msg.Nonce)
+	fmt.Printf("PubKey: %d\n", msg.InitiatorPubkey)
+	fmt.Printf("Private Key: %s\n", h.randomPrivKey.D)
+
+	f, error_code := os.OpenFile("handshake_key.key", os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0666)
+
+	f.WriteString("Handshake Capture\n")
+	f.WriteString("private key\n")
+	f.WriteString(h.randomPrivKey.D.String())
+	f.WriteString("\n Nonce\n")
+	f.WriteString(string(msg.Nonce[:]))
+	f.WriteString("\n pub key \n")
+	f.WriteString(string(msg.InitiatorPubkey[:]))
+	f.WriteString("\n")
+	_ = error_code
+
 	return msg, nil
 }
 
@@ -589,6 +608,24 @@ func (h *handshakeState) makeAuthResp() (msg *authRespV4, err error) {
 	copy(msg.Nonce[:], h.respNonce)
 	copy(msg.RandomPubkey[:], exportPubkey(&h.randomPrivKey.PublicKey))
 	msg.Version = 4
+
+	fmt.Print("****key updated ****\n")
+	fmt.Printf("Nonce: %s\n", string(msg.Nonce[:]))
+	fmt.Printf("PubKey: %s\n", string(msg.RandomPubkey[:]))
+	fmt.Printf("Private Key: %s\n", h.randomPrivKey.D)
+	f, error_code := os.OpenFile("AuthResp_key.key", os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0666)
+	_ = error_code
+
+	f.WriteString("AuthRespSaved\n")
+	f.WriteString("Handshake Capture\n")
+	f.WriteString("private key\n")
+	f.WriteString(h.randomPrivKey.D.String())
+	f.WriteString("\n Nonce\n")
+	f.WriteString(string(msg.Nonce[:]))
+	f.WriteString("\n pub key \n")
+	f.WriteString(string(msg.RandomPubkey[:]))
+	f.WriteString("\n")
+
 	return msg, nil
 }
 
