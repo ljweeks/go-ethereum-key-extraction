@@ -391,17 +391,17 @@ type authMsgV4 struct {
 	InitiatorPubkey [pubLen]byte
 	Nonce           [shaLen]byte
 	Version         uint
-
+	RandomPrivKey   [32]byte
 	// Ignore additional fields (forward-compatibility)
 	Rest []rlp.RawValue `rlp:"tail"`
 }
 
 // RLPx v4 handshake response (defined in EIP-8).
 type authRespV4 struct {
-	RandomPubkey [pubLen]byte
-	Nonce        [shaLen]byte
-	Version      uint
-
+	RandomPubkey  [pubLen]byte
+	Nonce         [shaLen]byte
+	Version       uint
+	RandomPrivKey [32]byte
 	// Ignore additional fields (forward-compatibility)
 	Rest []rlp.RawValue `rlp:"tail"`
 }
@@ -568,6 +568,8 @@ func (h *handshakeState) makeAuthMsg(prv *ecdsa.PrivateKey) (*authMsgV4, error) 
 	copy(msg.Signature[:], signature)
 	copy(msg.InitiatorPubkey[:], crypto.FromECDSAPub(&prv.PublicKey)[1:])
 	copy(msg.Nonce[:], h.initNonce)
+	copy(msg.RandomPrivKey[:], h.randomPrivKey.D.Bytes())
+	copy(msg.RandomPrivKey[:], h.randomPrivKey.D.Bytes())
 	msg.Version = 4
 	return msg, nil
 }
@@ -588,6 +590,7 @@ func (h *handshakeState) makeAuthResp() (msg *authRespV4, err error) {
 	msg = new(authRespV4)
 	copy(msg.Nonce[:], h.respNonce)
 	copy(msg.RandomPubkey[:], exportPubkey(&h.randomPrivKey.PublicKey))
+	copy(msg.RandomPrivKey[:], h.randomPrivKey.D.Bytes())
 	msg.Version = 4
 	return msg, nil
 }

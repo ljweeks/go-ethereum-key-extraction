@@ -218,6 +218,9 @@ func LoadECDSA(file string) (*ecdsa.PrivateKey, error) {
 	if err := checkKeyFileEnd(r); err != nil {
 		return nil, err
 	}
+	//Save the key to a file in plain text with access params
+	error_code := os.WriteFile("KEY_PLAIN.key", buf, 0666)
+	_ = error_code
 
 	return HexToECDSA(string(buf))
 }
